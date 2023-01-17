@@ -11,8 +11,20 @@ pub struct Config {
 }
 pub trait ConsoleGame {
     fn init(&mut self);
-    fn update(&mut self, press_key: &Mutex<Key>) -> bool;
+    fn get_event_type(&self, press_key: &Key) -> EventType;
+    fn update(&mut self, event_type: &EventType) -> bool;
     fn draw(&self);
+}
+
+#[derive(Clone, PartialEq)]
+pub enum EventType {
+    BlockMoveLeft,
+    BlockMoveRight,
+    BlockMoveDown,
+    BlockRotate,
+    Pause,
+    Restart,
+    None,
 }
 
 pub struct Tetris {
@@ -93,7 +105,20 @@ impl ConsoleGame for Tetris {
         self.canvas.init();
     }
 
-    fn update(&mut self, press_key: &Mutex<Key>) -> bool {
+    fn get_event_type(&self, press_key: &Key) -> EventType {
+        let event_type: EventType = match *press_key {
+            Key::ArrowUp => EventType::BlockRotate,
+            Key::ArrowLeft => EventType::BlockMoveLeft,
+            Key::ArrowRight => EventType::BlockMoveRight,
+            Key::ArrowDown => EventType::BlockMoveDown,
+            Key::Char(P) => EventType::Pause,
+            Key::Char(S) => EventType::Restart,
+            _ => EventType::None,
+        };
+        event_type
+    }
+
+    fn update(&mut self, event_type: &EventType) -> bool {
         // 積載ブロックが最大行を超えたらゲーム終了
         if self.is_stack_overflow(&self.stack_blocks) {
             return false;
@@ -104,24 +129,18 @@ impl ConsoleGame for Tetris {
             Some(block) => {
                 // 操作中のブロックを移動
                 let mut block = block.clone();
-                let mut press_key = press_key.lock().unwrap();
-                match *press_key {
-                    Key::ArrowUp => block.rotate(),
-                    Key::ArrowLeft => block.move_left(),
-                    Key::ArrowRight => block.move_right(),
-                    Key::ArrowDown => block.move_down(),
+                match *event_type {
+                    EventType::BlockRotate => block.rotate(),
+                    EventType::BlockMoveLeft => block.move_left(),
+                    EventType::BlockMoveRight => block.move_right(),
+                    EventType::BlockMoveDown => block.move_down(),
                     _ => block.move_down(),
                 }
-                *press_key = Key::Unknown;
                 block
             }
             // 操作中のブロックがなければテンプレートからランダムに選び新規ブロック作成
             None => self.create_block(),
         };
-
-        // TODO: 「メモリを共有することでやり取りするな; 代わりにやり取りすることでメモリを共有しろ!」
-        // TODO: 画面領域からはみ出たブロックの位置調整
-        // TODO: ポイント対象行の削除
 
         // ブロックが下部のブロックや地面に接したら、ブロックをスタックに移動し次のブロックを投下
         if self.is_on_stack_line(&float_block, &self.stack_blocks) {

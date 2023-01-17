@@ -111,6 +111,21 @@ pub struct Block {
 impl Block {
     pub fn new(template: BlockTemplate) -> Self {
         let direction = BlockDirection::Top;
+        /*
+        directionの値を下記で使用する方法
+        ・参照用の変数を使用する
+            let direction_ref = &direction;
+            let points = template.shapes.get(*direction_ref as usize); // 参照外し
+        ・明示的にクローンする
+          (メモリを消費するので大きな構造体のクローンは注意)
+            let points = template.shapes.get(direction.clone() as usize);
+        ・Copyトレイトでコピーする
+            メモリ自体をコピーするだけなので、メンバの型によってはシャローコピーになるので注意
+            #[derive(Clone, Copy)]
+            pub enum BlockDirection {
+
+            let points = template.shapes.get(direction as usize);
+        */
         let points = template.shapes.get(direction.clone() as usize);
         Self {
             template: template.clone(),
