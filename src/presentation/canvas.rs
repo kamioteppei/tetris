@@ -1,11 +1,6 @@
-use crate::block::Block;
+use crate::domain::block::Block;
+use crate::presentation::cell::Cell;
 use std::mem;
-
-#[derive(Clone)]
-pub struct Cell {
-    pub is_block: bool,
-    pub bgcolor: (i32, i32, i32),
-}
 
 pub struct Canvas {
     width: i32,

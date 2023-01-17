@@ -1,20 +1,9 @@
-use crate::block::{Block, BlockTemplates};
-use crate::canvas::Canvas;
+use crate::domain::block::Block;
+use crate::domain::block_template::BlockTemplates;
+use crate::domain::contract::*;
+use crate::presentation::canvas::Canvas;
 use console::Key;
 use std::mem;
-use std::sync::Mutex;
-
-pub struct Config {
-    pub width: i32,
-    pub height: i32,
-    pub speed: f64,
-}
-pub trait ConsoleGame {
-    fn init(&mut self);
-    fn get_event_type(&self, press_key: &Key) -> EventType;
-    fn update(&mut self, event_type: &EventType) -> bool;
-    fn draw(&self);
-}
 
 #[derive(Clone, PartialEq)]
 pub enum EventType {
@@ -22,13 +11,12 @@ pub enum EventType {
     BlockMoveRight,
     BlockMoveDown,
     BlockRotate,
-    Pause,
-    Restart,
     None,
 }
 
 pub struct Tetris {
     config: Config,
+    status: Status,
     block_templates: BlockTemplates,
     stack_blocks: Vec<Block>,
     float_block: Option<Block>,
@@ -39,13 +27,34 @@ impl Tetris {
     pub fn new(config: Config) -> Self {
         let width = config.width; // プリミティブ型の値は代入時に自動で複製されるから所有権も排他
         let height = config.height; // プリミティブ型以外はcloneでコピー作成するか参照を渡すか
+        let status = Status {
+            point: 0_i32,
+            is_continue: true,
+            update_duraltion_in_millis: 1000,
+        };
         Self {
             config,
+            status,
             block_templates: BlockTemplates::new(),
             stack_blocks: Vec::new(),
             float_block: None,
             canvas: Canvas::new(width, height, (0, 0, 0)),
         }
+    }
+
+    fn get_event_type(&self, press_key: &Option<Key>) -> EventType {
+        let press_key = match press_key {
+            Some(key) => key,
+            None => return EventType::None,
+        };
+        let event_type: EventType = match *press_key {
+            Key::ArrowUp => EventType::BlockRotate,
+            Key::ArrowLeft => EventType::BlockMoveLeft,
+            Key::ArrowRight => EventType::BlockMoveRight,
+            Key::ArrowDown => EventType::BlockMoveDown,
+            _ => EventType::None,
+        };
+        event_type
     }
 
     // 浮遊ブロックが積載ブロックに接地したか判定
@@ -105,36 +114,32 @@ impl ConsoleGame for Tetris {
         self.canvas.init();
     }
 
-    fn get_event_type(&self, press_key: &Key) -> EventType {
-        let event_type: EventType = match *press_key {
-            Key::ArrowUp => EventType::BlockRotate,
-            Key::ArrowLeft => EventType::BlockMoveLeft,
-            Key::ArrowRight => EventType::BlockMoveRight,
-            Key::ArrowDown => EventType::BlockMoveDown,
-            Key::Char(P) => EventType::Pause,
-            Key::Char(S) => EventType::Restart,
-            _ => EventType::None,
-        };
-        event_type
+    fn get_status(&self) -> Status {
+        self.status.clone()
     }
 
-    fn update(&mut self, event_type: &EventType) -> bool {
+    fn update(&mut self, press_key: &Option<Key>) -> Status {
         // 積載ブロックが最大行を超えたらゲーム終了
         if self.is_stack_overflow(&self.stack_blocks) {
-            return false;
+            return Status {
+                is_continue: false,
+                ..self.status
+            };
         }
+
+        let event_type = self.get_event_type(press_key);
 
         // 浮遊ブロック操作
         let float_block: Block = match &self.float_block {
             Some(block) => {
                 // 操作中のブロックを移動
                 let mut block = block.clone();
-                match *event_type {
+                match &event_type {
                     EventType::BlockRotate => block.rotate(),
                     EventType::BlockMoveLeft => block.move_left(),
                     EventType::BlockMoveRight => block.move_right(),
                     EventType::BlockMoveDown => block.move_down(),
-                    _ => block.move_down(),
+                    EventType::None => block.move_down(),
                 }
                 block
             }
@@ -153,7 +158,10 @@ impl ConsoleGame for Tetris {
         // 描画情報更新
         self.update_draw_info();
 
-        true
+        Status {
+            is_continue: true,
+            ..self.status
+        }
     }
 
     fn draw(&self) {
