@@ -2,14 +2,14 @@ use crate::domain::block::Block;
 use crate::presentation::cell::Cell;
 use std::mem;
 
-pub struct Canvas {
+pub struct DrawInfo {
     width: i32,
     height: i32,
     bgcolor: (i32, i32, i32),
     pub cells: Option<Vec<Vec<Cell>>>,
 }
 
-impl Canvas {
+impl DrawInfo {
     pub fn new(width: i32, height: i32, bgcolor: (i32, i32, i32)) -> Self {
         Self {
             width,

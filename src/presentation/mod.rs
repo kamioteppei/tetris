@@ -1,2 +1,2 @@
-pub mod canvas;
 pub mod cell;
+pub mod draw_info;

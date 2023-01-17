@@ -1,7 +1,7 @@
 use crate::domain::block::Block;
-use crate::domain::block_template::BlockTemplates;
 use crate::domain::contract::*;
-use crate::presentation::canvas::Canvas;
+use crate::presentation::draw_info::DrawInfo;
+use crate::service::block_service::BlockService;
 use console::Key;
 use std::mem;
 
@@ -17,10 +17,10 @@ pub enum EventType {
 pub struct Tetris {
     config: Config,
     status: Status,
-    block_templates: BlockTemplates,
-    stack_blocks: Vec<Block>,
     float_block: Option<Block>,
-    canvas: Canvas,
+    stack_blocks: Vec<Block>,
+    block_service: BlockService,
+    draw_info: DrawInfo,
 }
 
 impl Tetris {
@@ -35,10 +35,10 @@ impl Tetris {
         Self {
             config,
             status,
-            block_templates: BlockTemplates::new(),
-            stack_blocks: Vec::new(),
             float_block: None,
-            canvas: Canvas::new(width, height, (0, 0, 0)),
+            stack_blocks: Vec::new(),
+            block_service: BlockService::new(config.clone()),
+            draw_info: DrawInfo::new(width, height, (0, 0, 0)),
         }
     }
 
@@ -89,29 +89,19 @@ impl Tetris {
         false
     }
 
-    // 新規ブロック生成
-    fn create_block(&self) -> Block {
-        let random_template = self.block_templates.choose_random();
-        let mut new_block = Block::new(random_template);
-        let start_pos_x = self.config.width / 2_i32 - 1;
-        let start_pos_y = self.config.height - 1;
-        new_block.init(&(start_pos_x, start_pos_y));
-        new_block
-    }
-
     fn update_draw_info(&mut self) {
         // 全ブロックの描画情報を描画用オブジェクトに編集
         let mut all_blocks = self.stack_blocks.clone();
         if let Some(float_block) = self.float_block.clone() {
             all_blocks.push(float_block);
         }
-        self.canvas.update(all_blocks);
+        self.draw_info.update(all_blocks);
     }
 }
 
-impl ConsoleGame for Tetris {
+impl IConsoleGame for Tetris {
     fn init(&mut self) {
-        self.canvas.init();
+        self.draw_info.init();
     }
 
     fn get_status(&self) -> Status {
@@ -144,7 +134,7 @@ impl ConsoleGame for Tetris {
                 block
             }
             // 操作中のブロックがなければテンプレートからランダムに選び新規ブロック作成
-            None => self.create_block(),
+            None => self.block_service.create_block(),
         };
 
         // ブロックが下部のブロックや地面に接したら、ブロックをスタックに移動し次のブロックを投下
@@ -170,7 +160,7 @@ impl ConsoleGame for Tetris {
             let mut buf: String = String::from(" ");
             // 左端から回す
             for j in 0..self.config.width {
-                let cells = self.canvas.cells.as_ref();
+                let cells = self.draw_info.cells.as_ref();
                 let cell = cells
                     .unwrap()
                     .get(i as usize)

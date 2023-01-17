@@ -1,6 +1,8 @@
 mod domain;
 mod presentation;
-mod tetris;
+mod repository;
+mod service;
+mod usecase;
 
 use console::{Key, Term};
 use domain::contract::*;
@@ -9,7 +11,7 @@ use std::{
     thread::{sleep, spawn},
     time::Duration,
 };
-use tetris::Tetris;
+use usecase::tetris::Tetris;
 
 // キー入力監視(Key型のキューで保持)
 fn listen(press_keys: &Mutex<Vec<Key>>) -> ! {
@@ -27,7 +29,7 @@ fn listen(press_keys: &Mutex<Vec<Key>>) -> ! {
 }
 
 // 状態更新と画面更新
-fn run(game: &mut impl ConsoleGame, press_keys: &Mutex<Vec<Key>>) {
+fn run(game: &mut impl IConsoleGame, press_keys: &Mutex<Vec<Key>>) {
     game.init();
     'game: loop {
         let mut press_keys = press_keys.lock().unwrap();
