@@ -104,17 +104,27 @@ impl IConsoleGame for Tetris {
         self.draw_info.init();
     }
 
-    fn get_status(&self) -> Status {
-        self.status.clone()
+    fn get_config(&self) -> &Config {
+        &self.config
     }
 
-    fn update(&mut self, press_key: &Option<Key>) -> Status {
+    fn get_status(&self) -> &Status {
+        &self.status
+    }
+
+    fn get_draw_info(&self) -> &DrawInfo {
+        &self.draw_info
+    }
+
+    fn update(&mut self, press_key: &Option<Key>) -> &Status {
         // 積載ブロックが最大行を超えたらゲーム終了
         if self.is_stack_overflow(&self.stack_blocks) {
-            return Status {
+            let status = Status {
                 is_continue: false,
                 ..self.status
             };
+            self.status = status;
+            return &self.status;
         }
 
         let event_type = self.get_event_type(press_key);
@@ -148,28 +158,15 @@ impl IConsoleGame for Tetris {
         // 描画情報更新
         self.update_draw_info();
 
-        Status {
+        let status = Status {
             is_continue: true,
             ..self.status
-        }
+        };
+        self.status = status;
+        &self.status
     }
 
-    fn draw(&self) {
-        // 上段から回す
-        for i in (0..self.config.height).rev() {
-            let mut buf: String = String::from(" ");
-            // 左端から回す
-            for j in 0..self.config.width {
-                let cells = self.draw_info.cells.as_ref();
-                let cell = cells
-                    .unwrap()
-                    .get(i as usize)
-                    .unwrap()
-                    .get(j as usize)
-                    .unwrap();
-                buf += if cell.is_block { "■" } else { "□" };
-            }
-            println!("\x1B[{};1H{}", self.config.height - i, buf);
-        }
+    fn draw(&self, drawer: &impl IDrawer) {
+        drawer.draw(&self);
     }
 }

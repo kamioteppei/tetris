@@ -1,6 +1,7 @@
+use crate::domain::block_template::BlockTemplate;
+use crate::domain::tetris::Tetris;
+use crate::presentation::draw_info::DrawInfo;
 use console::Key;
-
-use super::block_template::BlockTemplate;
 
 #[derive(Clone, Copy)]
 pub struct Config {
@@ -16,9 +17,15 @@ pub struct Status {
 }
 pub trait IConsoleGame {
     fn init(&mut self);
-    fn update(&mut self, press_key: &Option<Key>) -> Status;
-    fn draw(&self);
-    fn get_status(&self) -> Status;
+    fn update(&mut self, press_key: &Option<Key>) -> &Status;
+    fn draw(&self, drawer: &impl IDrawer);
+    fn get_config(&self) -> &Config;
+    fn get_status(&self) -> &Status;
+    fn get_draw_info(&self) -> &DrawInfo;
+}
+
+pub trait IDrawer {
+    fn draw(&self, tetris: &Tetris);
 }
 
 pub trait IBlockTemplateRepository {

@@ -1,1 +1,1 @@
-pub mod tetris;
+pub mod play_console;
