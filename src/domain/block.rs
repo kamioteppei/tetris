@@ -1,4 +1,4 @@
-use crate::domain::block_template::BlockTemplate;
+use crate::domain::{atom::Atom, block_template::BlockTemplate};
 
 pub const BLOCK_ATOMS_SIZE: usize = 4;
 pub const BLOCK_DIRECTION_ITEMS_SIZE: usize = 4;
@@ -82,5 +82,16 @@ impl Block {
         let new_points = shape.map(|(x, y)| (x + center_point_x, y + center_point_y));
         self.direction = new_direction;
         self.points = new_points;
+    }
+
+    pub fn to_atoms(&self) -> Vec<Atom> {
+        let atoms = self
+            .points
+            .map(|point| Atom {
+                point,
+                bgcolor: self.template.color,
+            })
+            .to_vec();
+        atoms
     }
 }

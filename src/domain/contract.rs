@@ -11,17 +11,21 @@ pub struct Config {
 
 #[derive(Clone)]
 pub struct Status {
-    pub point: i32,
-    pub is_continue: bool,
+    pub score: i32,
     pub update_duraltion_in_millis: u64,
 }
+
+pub enum TetrisError {
+    StackOverFlowError,
+}
+
 pub trait IConsoleGame {
     fn init(&mut self);
-    fn update(&mut self, press_key: &Option<Key>) -> &Status;
+    fn update(&mut self, press_key: &Option<Key>) -> Result<(), TetrisError>;
     fn draw(&self, drawer: &impl IDrawer);
-    fn get_config(&self) -> &Config;
-    fn get_status(&self) -> &Status;
-    fn get_draw_info(&self) -> &DrawInfo;
+    fn ref_config(&self) -> &Config;
+    fn ref_status(&self) -> &Status;
+    fn ref_draw_info(&self) -> &DrawInfo;
 }
 
 pub trait IDrawer {
