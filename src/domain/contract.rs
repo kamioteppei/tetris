@@ -1,12 +1,13 @@
-use crate::domain::block_template::BlockTemplate;
-use crate::domain::tetris::Tetris;
-use crate::presentation::draw_info::DrawInfo;
+use crate::domain::block::block_template::BlockTemplate;
+use crate::domain::draw::draw_info::DrawInfo;
 use console::Key;
 
 #[derive(Clone, Copy)]
 pub struct Config {
     pub width: i32,
     pub height: i32,
+    pub score_one_line: i32,
+    pub score_multiple_line_weight: i32,
 }
 
 #[derive(Clone)]
@@ -29,7 +30,7 @@ pub trait IConsoleGame {
 }
 
 pub trait IDrawer {
-    fn draw(&self, tetris: &Tetris);
+    fn draw(&self, draw_info: &DrawInfo);
 }
 
 pub trait IBlockTemplateRepository {

@@ -1,5 +1,5 @@
-use crate::domain::atom::Atom;
-use crate::presentation::cell::Cell;
+use crate::domain::block::atom::Atom;
+use crate::domain::draw::cell::Cell;
 use std::mem;
 
 pub struct DrawInfo {
@@ -19,11 +19,19 @@ impl DrawInfo {
         }
     }
 
+    pub fn ref_width(&self) -> i32 {
+        self.width
+    }
+
+    pub fn ref_height(&self) -> i32 {
+        self.height
+    }
+
     pub fn ref_cells(&self) -> &Option<Vec<Vec<Cell>>> {
         &self.cells
     }
 
-    pub fn init(&mut self) {
+    pub fn clear(&mut self) {
         self.cells = Some(vec![
             vec![
                 Cell {
@@ -37,18 +45,18 @@ impl DrawInfo {
     }
 
     pub fn update(&mut self, atoms: &Vec<Atom>) {
-        self.init();
+        self.clear();
 
         let mut vec_cell = self.cells.clone().unwrap();
         for atom in atoms {
-            let (x, y) = atom.point;
+            let &(x, y) = atom.ref_point();
             // 画面上に隠れている部分は描画対象外
             if y >= self.height {
                 continue;
             }
             let mut new_cell = Cell {
                 is_block: true,
-                bgcolor: atom.bgcolor,
+                bgcolor: atom.ref_bgcolor().clone(),
             };
 
             mem::swap(&mut vec_cell[y as usize][x as usize], &mut new_cell);

@@ -1,9 +1,9 @@
+use crate::domain::draw::draw_info::DrawInfo;
 use crate::domain::{
-    block::Block,
-    block_stack::BlockStack,
+    block::block::Block,
+    block::block_stack::BlockStack,
     contract::{Config, IConsoleGame, IDrawer, Status, TetrisError},
 };
-use crate::presentation::draw_info::DrawInfo;
 use crate::service::block_service::BlockService;
 use console::Key;
 
@@ -66,11 +66,17 @@ impl Tetris {
         }
         self.draw_info.update(&all_atoms);
     }
+
+    fn update_score(&mut self, delete_line_count: i32) {
+        let score_one_line = self.config.score_one_line;
+        let score_multiple_line_weight = self.config.score_multiple_line_weight;
+        self.status.score += score_one_line * (delete_line_count ^ score_multiple_line_weight);
+    }
 }
 
 impl IConsoleGame for Tetris {
     fn init(&mut self) {
-        self.draw_info.init();
+        self.draw_info.clear();
     }
 
     fn ref_config(&self) -> &Config {
@@ -93,8 +99,7 @@ impl IConsoleGame for Tetris {
 
         // 埋まったブロック行削除
         let delete_line_count = self.block_stack.compress();
-        let score = self.status.score + 100 * delete_line_count;
-        self.status.score = score;
+        self.update_score(delete_line_count);
 
         // イベント種別判定
         let event_type = self.get_event_type(press_key);
@@ -138,6 +143,6 @@ impl IConsoleGame for Tetris {
     }
 
     fn draw(&self, drawer: &impl IDrawer) {
-        drawer.draw(&self);
+        drawer.draw(&self.draw_info);
     }
 }

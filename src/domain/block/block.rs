@@ -1,4 +1,4 @@
-use crate::domain::{atom::Atom, block_template::BlockTemplate};
+use crate::domain::{block::atom::Atom, block::block_template::BlockTemplate};
 
 pub const BLOCK_ATOMS_SIZE: usize = 4;
 pub const BLOCK_DIRECTION_ITEMS_SIZE: usize = 4;
@@ -12,9 +12,9 @@ pub enum BlockDirection {
 }
 #[derive(Clone)]
 pub struct Block {
-    pub template: BlockTemplate,
-    pub direction: BlockDirection,
-    pub points: [(i32, i32); BLOCK_ATOMS_SIZE],
+    template: BlockTemplate,
+    direction: BlockDirection,
+    points: [(i32, i32); BLOCK_ATOMS_SIZE],
 }
 
 impl Block {
@@ -35,12 +35,16 @@ impl Block {
 
             let points = template.shapes.get(direction as usize);
         */
-        let points = template.shapes.get(direction.clone() as usize);
+        let points = template.ref_shapes().get(direction.clone() as usize);
         Self {
             template: template.clone(),
             direction,
             points: points.unwrap().clone(),
         }
+    }
+
+    pub fn ref_points(&self) -> [(i32, i32); BLOCK_ATOMS_SIZE] {
+        self.points
     }
 
     pub fn init(&mut self, start_pos: &(i32, i32)) {
@@ -75,7 +79,7 @@ impl Block {
         };
         let shape: &[(i32, i32); BLOCK_ATOMS_SIZE] = self
             .template
-            .shapes
+            .ref_shapes()
             .get(new_direction.clone() as usize)
             .unwrap();
         let (center_point_x, center_point_y): &(i32, i32) = self.points.get(2).unwrap();
@@ -87,10 +91,7 @@ impl Block {
     pub fn to_atoms(&self) -> Vec<Atom> {
         let atoms = self
             .points
-            .map(|point| Atom {
-                point,
-                bgcolor: self.template.color,
-            })
+            .map(|point| Atom::new(point, self.template.ref_color().clone()))
             .to_vec();
         atoms
     }

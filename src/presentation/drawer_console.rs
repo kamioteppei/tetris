@@ -1,17 +1,15 @@
-use crate::domain::{
-    contract::{IConsoleGame, IDrawer},
-    tetris::Tetris,
-};
+use crate::domain::{contract::IDrawer, draw::draw_info::DrawInfo};
 
 pub struct DrawConsole {}
+
 impl IDrawer for DrawConsole {
-    fn draw(&self, tetris: &Tetris) {
+    fn draw(&self, draw_info: &DrawInfo) {
         // 上段から回す
-        for i in (0..tetris.ref_config().height).rev() {
+        for i in (0..draw_info.ref_height()).rev() {
             let mut buf: String = String::from(" ");
             // 左端から回す
-            for j in 0..tetris.ref_config().width {
-                let cells = tetris.ref_draw_info().ref_cells().as_ref();
+            for j in 0..draw_info.ref_width() {
+                let cells = draw_info.ref_cells().as_ref();
                 let cell = cells
                     .unwrap()
                     .get(i as usize)
@@ -20,7 +18,7 @@ impl IDrawer for DrawConsole {
                     .unwrap();
                 buf += if cell.is_block { "■" } else { "□" };
             }
-            println!("\x1B[{};1H{}", tetris.ref_config().height - i, buf);
+            println!("\x1B[{};1H{}", draw_info.ref_height() - i, buf);
         }
     }
 }

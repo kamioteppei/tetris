@@ -1,5 +1,5 @@
 use crate::{
-    domain::{block::Block, contract::IBlockTemplateRepository},
+    domain::{block::block::Block, contract::IBlockTemplateRepository},
     repository::block_template_repository::BlockTemplateRepository,
 };
 
