@@ -1,19 +1,22 @@
+use super::r#type::Point;
+use super::r#type::RGB;
+
 #[derive(Clone)]
 pub struct Atom {
-    point: (i32, i32),
-    bgcolor: (i32, i32, i32),
+    point: Point,
+    bgcolor: RGB,
 }
 
 impl Atom {
-    pub fn new(point: (i32, i32), bgcolor: (i32, i32, i32)) -> Self {
+    pub fn new(point: Point, bgcolor: RGB) -> Self {
         Self { point, bgcolor }
     }
 
-    pub fn ref_point(&self) -> &(i32, i32) {
+    pub fn ref_point(&self) -> &Point {
         &self.point
     }
 
-    pub fn ref_bgcolor(&self) -> &(i32, i32, i32) {
+    pub fn ref_bgcolor(&self) -> &RGB {
         &self.bgcolor
     }
 }

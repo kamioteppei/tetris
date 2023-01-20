@@ -1,25 +1,21 @@
-use crate::domain::block::block::BLOCK_ATOMS_SIZE;
-use crate::domain::block::block::BLOCK_DIRECTION_ITEMS_SIZE;
+use super::r#type::{Shapes, RGB};
 
 #[derive(Clone)]
 pub struct BlockTemplate {
-    shapes: [[(i32, i32); BLOCK_ATOMS_SIZE]; BLOCK_DIRECTION_ITEMS_SIZE],
-    color: (i32, i32, i32),
+    shapes: Shapes,
+    color: RGB,
 }
 
 impl BlockTemplate {
-    pub fn new(
-        shapes: [[(i32, i32); BLOCK_ATOMS_SIZE]; BLOCK_DIRECTION_ITEMS_SIZE],
-        color: (i32, i32, i32),
-    ) -> Self {
+    pub fn new(shapes: Shapes, color: RGB) -> Self {
         Self { shapes, color }
     }
 
-    pub fn ref_shapes(&self) -> &[[(i32, i32); BLOCK_ATOMS_SIZE]; BLOCK_DIRECTION_ITEMS_SIZE] {
+    pub fn ref_shapes(&self) -> &Shapes {
         &self.shapes
     }
 
-    pub fn ref_color(&self) -> &(i32, i32, i32) {
+    pub fn ref_color(&self) -> &RGB {
         &self.color
     }
 }

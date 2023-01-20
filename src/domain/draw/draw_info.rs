@@ -1,16 +1,17 @@
 use crate::domain::block::atom::Atom;
+use crate::domain::block::r#type::RGB;
 use crate::domain::draw::cell::Cell;
 use std::mem;
 
 pub struct DrawInfo {
     width: i32,
     height: i32,
-    bgcolor: (i32, i32, i32),
+    bgcolor: RGB,
     cells: Option<Vec<Vec<Cell>>>,
 }
 
 impl DrawInfo {
-    pub fn new(width: i32, height: i32, bgcolor: (i32, i32, i32)) -> Self {
+    pub fn new(width: i32, height: i32, bgcolor: RGB) -> Self {
         Self {
             width,
             height,

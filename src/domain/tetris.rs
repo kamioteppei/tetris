@@ -1,7 +1,6 @@
 use crate::domain::draw::draw_info::DrawInfo;
 use crate::domain::{
-    block::block::Block,
-    block::stack::BlockStack,
+    block::{block::Block, helper::collision::CollisionHelper, stack::BlockStack},
     contract::{Config, IConsoleGame, IDrawer, Status, TetrisError},
 };
 use crate::service::block_service::BlockService;
@@ -97,14 +96,12 @@ impl IConsoleGame for Tetris {
         if self.block_stack.is_stack_overflow() {
             return Err(TetrisError::StackOverFlowError);
         }
-
         // 埋まったブロック行削除
         let delete_line_count = self.block_stack.compress();
         self.update_score(delete_line_count);
 
         // イベント種別判定
         let event_type = self.get_event_type(press_key);
-
         // 浮遊ブロック操作
         let float_block: Block = match &self.float_block {
             Some(block) => {
@@ -130,7 +127,11 @@ impl IConsoleGame for Tetris {
         };
 
         // ブロックが下部のブロックや下面に接したら、浮遊ブロックをスタックに移動
-        if self.block_stack.is_on_stack_height(&float_block) {
+        if CollisionHelper::is_on_stack_height(
+            &self.config,
+            &float_block,
+            &self.block_stack.ref_atoms(),
+        ) {
             self.block_stack.add_block(float_block.clone());
             self.float_block = None;
         } else {

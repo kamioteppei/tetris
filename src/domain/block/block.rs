@@ -1,7 +1,5 @@
+use super::r#type::{Point, Points};
 use crate::domain::{block::atom::Atom, block::template::BlockTemplate};
-
-pub const BLOCK_ATOMS_SIZE: usize = 4;
-pub const BLOCK_DIRECTION_ITEMS_SIZE: usize = 4;
 
 #[derive(Clone)]
 pub enum BlockDirection {
@@ -14,7 +12,7 @@ pub enum BlockDirection {
 pub struct Block {
     template: BlockTemplate,
     direction: BlockDirection,
-    points: [(i32, i32); BLOCK_ATOMS_SIZE],
+    points: Points,
 }
 
 impl Block {
@@ -43,11 +41,11 @@ impl Block {
         }
     }
 
-    pub fn ref_points(&self) -> [(i32, i32); BLOCK_ATOMS_SIZE] {
+    pub fn ref_points(&self) -> Points {
         self.points
     }
 
-    pub fn init(&mut self, start_pos: &(i32, i32)) {
+    pub fn init(&mut self, start_pos: &Point) {
         self.r#move(start_pos);
     }
 
@@ -63,7 +61,7 @@ impl Block {
         self.r#move(&(0, -1));
     }
 
-    fn r#move(&mut self, move_size: &(i32, i32)) {
+    fn r#move(&mut self, move_size: &Point) {
         let (move_size_x, move_size_y) = move_size;
         let points = self.points;
         let new_points = points.map(|(x, y)| (x + move_size_x, y + move_size_y));
@@ -77,12 +75,12 @@ impl Block {
             BlockDirection::Down => BlockDirection::Right,
             BlockDirection::Left => BlockDirection::Down,
         };
-        let shape: &[(i32, i32); BLOCK_ATOMS_SIZE] = self
+        let shape: &Points = self
             .template
             .ref_shapes()
             .get(new_direction.clone() as usize)
             .unwrap();
-        let (center_point_x, center_point_y): &(i32, i32) = self.points.get(2).unwrap();
+        let (center_point_x, center_point_y): &Point = self.points.get(2).unwrap();
         let new_points = shape.map(|(x, y)| (x + center_point_x, y + center_point_y));
         self.direction = new_direction;
         self.points = new_points;
