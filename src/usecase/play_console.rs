@@ -32,7 +32,6 @@ pub fn play_console(config: Config) {
 
     // ゲーム終了
     println!("Game Over!");
-    println!("Score: {}", tetris.ref_status().score);
 }
 
 // キー入力監視(Key型のキューで保持)

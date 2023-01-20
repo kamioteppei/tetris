@@ -30,7 +30,7 @@ pub trait IConsoleGame {
 }
 
 pub trait IDrawer {
-    fn draw(&self, draw_info: &DrawInfo);
+    fn draw(&self, draw_info: &DrawInfo, status: &Status);
 }
 
 pub trait IBlockTemplateRepository {

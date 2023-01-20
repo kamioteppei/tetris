@@ -70,7 +70,8 @@ impl Tetris {
     fn update_score(&mut self, delete_line_count: i32) {
         let score_one_line = self.config.score_one_line;
         let score_multiple_line_weight = self.config.score_multiple_line_weight;
-        self.status.score += score_one_line * (delete_line_count ^ score_multiple_line_weight);
+        self.status.score +=
+            score_one_line * delete_line_count.pow(score_multiple_line_weight as u32);
     }
 }
 
@@ -143,6 +144,6 @@ impl IConsoleGame for Tetris {
     }
 
     fn draw(&self, drawer: &impl IDrawer) {
-        drawer.draw(&self.draw_info);
+        drawer.draw(&self.draw_info, &self.status);
     }
 }

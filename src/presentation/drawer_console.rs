@@ -1,9 +1,12 @@
-use crate::domain::{contract::IDrawer, draw::draw_info::DrawInfo};
+use crate::domain::{
+    contract::{IDrawer, Status},
+    draw::draw_info::DrawInfo,
+};
 
 pub struct DrawConsole {}
 
 impl IDrawer for DrawConsole {
-    fn draw(&self, draw_info: &DrawInfo) {
+    fn draw(&self, draw_info: &DrawInfo, status: &Status) {
         // 上段から回す
         for i in (0..draw_info.ref_height()).rev() {
             let mut buf: String = String::from(" ");
@@ -20,5 +23,6 @@ impl IDrawer for DrawConsole {
             }
             println!("\x1B[{};1H{}", draw_info.ref_height() - i, buf);
         }
+        println!("Score: {}", status.score);
     }
 }
