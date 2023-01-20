@@ -1,4 +1,4 @@
-use crate::domain::{block::atom::Atom, block::block_template::BlockTemplate};
+use crate::domain::{block::atom::Atom, block::template::BlockTemplate};
 
 pub const BLOCK_ATOMS_SIZE: usize = 4;
 pub const BLOCK_DIRECTION_ITEMS_SIZE: usize = 4;

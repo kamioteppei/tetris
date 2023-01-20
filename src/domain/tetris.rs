@@ -1,7 +1,7 @@
 use crate::domain::draw::draw_info::DrawInfo;
 use crate::domain::{
     block::block::Block,
-    block::block_stack::BlockStack,
+    block::stack::BlockStack,
     contract::{Config, IConsoleGame, IDrawer, Status, TetrisError},
 };
 use crate::service::block_service::BlockService;

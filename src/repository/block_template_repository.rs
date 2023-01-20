@@ -1,4 +1,4 @@
-use crate::domain::{block::block_template::BlockTemplate, contract::IBlockTemplateRepository};
+use crate::domain::{block::template::BlockTemplate, contract::IBlockTemplateRepository};
 use rand::Rng;
 
 pub const BLOCK_TEMPLATE_ITEMS_SIZE: usize = 7;

@@ -1,4 +1,4 @@
-use crate::domain::block::block_template::BlockTemplate;
+use crate::domain::block::template::BlockTemplate;
 use crate::domain::draw::draw_info::DrawInfo;
 use console::Key;
 
