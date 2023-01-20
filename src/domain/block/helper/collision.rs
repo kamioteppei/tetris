@@ -30,4 +30,26 @@ impl CollisionHelper {
         }
         vec_stack_height_by_col
     }
+
+    pub fn validate_block(config: &Config, float_block: &Block, atoms: &Vec<Atom>) -> bool {
+        // 画面両外側にはみ出している場合不可
+        let is_overlap_to_outline = float_block
+            .ref_points()
+            .into_iter()
+            .any(|(x, _)| x < 0 || x >= config.width);
+        if is_overlap_to_outline {
+            return false;
+        }
+        // 積載ブロックと重複している場合不可
+        for (bx, by) in float_block.ref_points() {
+            let is_overlap_to_stack = atoms.into_iter().any(|atom| {
+                let &(ax, ay) = atom.ref_point();
+                ax == bx && ay == by
+            });
+            if is_overlap_to_stack {
+                return false;
+            }
+        }
+        true
+    }
 }

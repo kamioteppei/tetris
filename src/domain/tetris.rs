@@ -72,6 +72,36 @@ impl Tetris {
         self.status.score +=
             score_one_line * delete_line_count.pow(score_multiple_line_weight as u32);
     }
+
+    fn block_rotate(&self, block: &mut Block) {
+        let mut clone = block.clone();
+        clone.rotate();
+        if CollisionHelper::validate_block(&self.config, &clone, &self.block_stack.ref_atoms()) {
+            block.rotate();
+        } else {
+            block.move_down();
+        }
+    }
+
+    fn block_move_left(&self, block: &mut Block) {
+        let mut clone = block.clone();
+        clone.move_left();
+        if CollisionHelper::validate_block(&self.config, &clone, &self.block_stack.ref_atoms()) {
+            block.move_left();
+        } else {
+            block.move_down();
+        }
+    }
+
+    fn block_move_right(&self, block: &mut Block) {
+        let mut clone = block.clone();
+        clone.move_right();
+        if CollisionHelper::validate_block(&self.config, &clone, &self.block_stack.ref_atoms()) {
+            block.move_right();
+        } else {
+            block.move_down();
+        }
+    }
 }
 
 impl IConsoleGame for Tetris {
@@ -108,11 +138,10 @@ impl IConsoleGame for Tetris {
                 // 浮遊ブロックの操作
                 let mut block = block.clone();
                 match &event_type {
-                    EventType::BlockRotate => block.rotate(),
-                    EventType::BlockMoveLeft => block.move_left(),
-                    EventType::BlockMoveRight => block.move_right(),
-                    EventType::BlockMoveDown => block.move_down(),
-                    EventType::None => block.move_down(),
+                    EventType::BlockRotate => self.block_rotate(&mut block),
+                    EventType::BlockMoveLeft => self.block_move_left(&mut block),
+                    EventType::BlockMoveRight => self.block_move_right(&mut block),
+                    EventType::BlockMoveDown | EventType::None => block.move_down(),
                 }
                 block
             }
