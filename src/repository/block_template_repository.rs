@@ -1,10 +1,14 @@
-use crate::domain::{block::template::BlockTemplate, contract::IBlockTemplateRepository};
+use crate::domain::{
+    block::{
+        r#type::{BlockTemplates, BLOCK_TEMPLATE_ITEMS_SIZE},
+        template::BlockTemplate,
+    },
+    contract::IBlockTemplateRepository,
+};
 use rand::Rng;
 
-pub const BLOCK_TEMPLATE_ITEMS_SIZE: usize = 7;
-
 pub struct BlockTemplateRepository {
-    templates: [BlockTemplate; BLOCK_TEMPLATE_ITEMS_SIZE],
+    templates: BlockTemplates,
 }
 
 impl BlockTemplateRepository {
