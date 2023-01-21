@@ -52,30 +52,22 @@ fn listen(press_keys: &Mutex<Vec<Key>>) -> ! {
 // 状態更新と画面更新
 fn run(tetris: &mut impl IConsoleGame, press_keys: &Mutex<Vec<Key>>) {
     tetris.init();
-    let drawer: DrawConsole = DrawConsole {};
     'tetris: loop {
         let mut press_keys = press_keys.lock().unwrap();
+
         if press_keys.is_empty() {
             // 入力キーを取得できない場合の更新処理
-            if let Err(error) = tetris.update(&None) {
-                match error {
-                    TetrisError::StackOverFlowError => {
-                        break 'tetris;
-                    }
-                }
-            };
-            tetris.draw(&drawer);
+            let is_continue = do_event(tetris, &None);
+            if !is_continue {
+                break 'tetris;
+            }
         } else {
             // 入力キーを順次渡して更新処理
             while let Some(press_key) = press_keys.pop() {
-                if let Err(error) = tetris.update(&Some(press_key)) {
-                    match error {
-                        TetrisError::StackOverFlowError => {
-                            break 'tetris;
-                        }
-                    }
-                };
-                tetris.draw(&drawer);
+                let is_continue = do_event(tetris, &Some(press_key));
+                if !is_continue {
+                    break 'tetris;
+                }
             }
             *press_keys = Vec::new();
         }
@@ -86,4 +78,17 @@ fn run(tetris: &mut impl IConsoleGame, press_keys: &Mutex<Vec<Key>>) {
         let dulation = tetris.ref_status().update_duraltion_in_millis;
         sleep(Duration::from_millis(dulation));
     }
+}
+
+fn do_event(tetris: &mut impl IConsoleGame, press_keys: &Option<Key>) -> bool {
+    let drawer: DrawConsole = DrawConsole {};
+    if let Err(error) = tetris.update(&press_keys) {
+        match error {
+            TetrisError::StackOverFlowError => {
+                return false;
+            }
+        }
+    };
+    tetris.draw(&drawer);
+    true
 }
