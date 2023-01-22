@@ -11,6 +11,7 @@ impl CollisionHelper {
         // 各列の最大行数配列
         let vec_stack_height_by_col = Self::get_vec_stack_height_by_col(config, atoms);
         // 浮遊ブロックが列の最大行より下にあるか判定
+        // TODO: バグ修正　最大行だけでは条件不足⇒地続きの中で最大行
         for (x, y) in float_block.ref_points() {
             if y <= vec_stack_height_by_col[x as usize] + 1 {
                 return true;
