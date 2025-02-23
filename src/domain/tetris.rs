@@ -1,14 +1,25 @@
+use super::draw::container::DrawContainer;
 use crate::domain::{
     block::{block::Block, helper::collision::CollisionHelper, stack::BlockStack},
-    draw::draw_model::DrawModel,
+    draw::table::DrawTable,
     message::monitor::MonitorMessage,
     message::tetris::TetrisMessage,
 };
 use crate::service::block_service::BlockService;
+
 use tokio::sync::mpsc::Sender;
 
+#[derive(Clone, Copy)]
+pub struct TetrisConfig {
+    pub width: i32,
+    pub height: i32,
+    pub score_one_line: i32,
+    pub score_multiple_line_weight: i32,
+    pub initial_duration: u64,
+}
+
 #[derive(Clone, PartialEq)]
-pub enum EventType {
+pub enum TetrisEventType {
     BlockMoveLeft,
     BlockMoveRight,
     BlockMoveDown,
@@ -17,22 +28,8 @@ pub enum EventType {
 }
 
 #[derive(Clone, Copy)]
-pub struct Config {
-    pub width: i32,
-    pub height: i32,
-    pub score_one_line: i32,
-    pub score_multiple_line_weight: i32,
-}
-
-#[derive(Clone, Copy)]
-pub struct Status {
+pub struct TetrisStatus {
     pub score: i32,
-}
-
-#[derive(Clone)]
-pub struct DrawModelContainer {
-    pub draw_model: DrawModel,
-    pub status: Status,
 }
 
 pub enum TetrisError {
@@ -41,20 +38,20 @@ pub enum TetrisError {
 
 pub struct Tetris {
     id: usize,
-    config: Config,
-    status: Status,
+    config: TetrisConfig,
+    status: TetrisStatus,
     float_block: Option<Block>,
     block_stack: BlockStack,
     block_service: BlockService,
-    draw_model: DrawModel,
+    draw_table: DrawTable,
     monitor_tx: Sender<MonitorMessage>,
 }
 
 impl Tetris {
-    pub fn new(id: usize, config: Config, monitor_tx: Sender<MonitorMessage>) -> Self {
+    pub fn new(id: usize, config: TetrisConfig, monitor_tx: Sender<MonitorMessage>) -> Self {
         let width = config.width; // プリミティブ型の値は代入時に自動で複製されるから所有権も排他
         let height = config.height; // プリミティブ型以外はcloneでコピー作成するか参照を渡すか
-        let status = Status { score: 0 };
+        let status = TetrisStatus { score: 0 };
         Self {
             id,
             config,
@@ -62,9 +59,13 @@ impl Tetris {
             float_block: None,
             block_stack: BlockStack::new(config.clone()),
             block_service: BlockService::new(),
-            draw_model: DrawModel::new(width, height, (0, 0, 0)),
+            draw_table: DrawTable::new(width, height, (0, 0, 0)),
             monitor_tx,
         }
+    }
+
+    pub fn init(&mut self) {
+        self.draw_table.clear();
     }
 
     pub async fn handle_message(&mut self, msg: TetrisMessage) {
@@ -80,9 +81,10 @@ impl Tetris {
                 self.monitor_tx
                     .send(MonitorMessage::Display(
                         self.id,
-                        DrawModelContainer {
-                            draw_model: self.draw_model.clone(),
+                        DrawContainer {
+                            id: self.id,
                             status: self.status.clone(),
+                            draw_table: self.draw_table.clone(),
                         },
                     ))
                     .await
@@ -91,7 +93,7 @@ impl Tetris {
         }
     }
 
-    fn update(&mut self, event_type: EventType) -> Result<(), TetrisError> {
+    fn update(&mut self, event_type: TetrisEventType) -> Result<(), TetrisError> {
         // 積載ブロックが最大行を超えたらゲーム終了
         if self.block_stack.is_stack_overflow() {
             return Err(TetrisError::StackOverFlowError);
@@ -106,10 +108,10 @@ impl Tetris {
                 // 浮遊ブロックの操作
                 let mut block = block.clone();
                 match &event_type {
-                    EventType::BlockRotate => self.block_rotate(&mut block),
-                    EventType::BlockMoveLeft => self.block_move_left(&mut block),
-                    EventType::BlockMoveRight => self.block_move_right(&mut block),
-                    EventType::BlockMoveDown | EventType::None => block.move_down(),
+                    TetrisEventType::BlockRotate => self.block_rotate(&mut block),
+                    TetrisEventType::BlockMoveLeft => self.block_move_left(&mut block),
+                    TetrisEventType::BlockMoveRight => self.block_move_right(&mut block),
+                    TetrisEventType::BlockMoveDown | TetrisEventType::None => block.move_down(),
                 }
                 block
             }
@@ -136,18 +138,18 @@ impl Tetris {
         };
 
         // 描画情報更新
-        self.update_draw_model();
+        self.update_draw_table();
 
         Ok(())
     }
 
-    fn update_draw_model(&mut self) {
+    fn update_draw_table(&mut self) {
         // 全ブロックの描画情報を描画用オブジェクトに編集
         let mut all_atoms = self.block_stack.ref_atoms().clone();
         if let Some(float_block) = self.float_block.clone() {
             all_atoms.append(&mut float_block.to_atoms());
         }
-        self.draw_model.update(&all_atoms);
+        self.draw_table.update(&all_atoms);
     }
 
     fn update_score(&mut self, delete_line_count: i32) {

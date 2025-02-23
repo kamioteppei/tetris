@@ -1,5 +1,5 @@
-use crate::domain::tetris::DrawModelContainer;
+use crate::domain::draw::container::DrawContainer;
 
 pub enum MonitorMessage {
-    Display(usize, DrawModelContainer),
+    Display(usize, DrawContainer),
 }

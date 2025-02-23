@@ -1,13 +1,17 @@
 use crate::domain::{
     block::{atom::Atom, block::Block},
-    tetris::Config,
+    tetris::TetrisConfig,
 };
 use std::mem;
 
 pub struct CollisionHelper {}
 impl CollisionHelper {
     // 浮遊ブロックが積載ブロックに接地したか判定
-    pub fn is_on_stack_height(config: &Config, float_block: &Block, atoms: &Vec<Atom>) -> bool {
+    pub fn is_on_stack_height(
+        config: &TetrisConfig,
+        float_block: &Block,
+        atoms: &Vec<Atom>,
+    ) -> bool {
         // 各列の最大行数配列
         let vec_stack_height_by_col = Self::get_vec_stack_height_by_col(config, atoms);
         // 浮遊ブロックが列の最大行より下にあるか判定
@@ -20,7 +24,7 @@ impl CollisionHelper {
         false
     }
 
-    fn get_vec_stack_height_by_col(config: &Config, atoms: &Vec<Atom>) -> Vec<i32> {
+    fn get_vec_stack_height_by_col(config: &TetrisConfig, atoms: &Vec<Atom>) -> Vec<i32> {
         // 各列の最大行数配列を生成（ブロックがない列は-1行目とみなす）
         let mut vec_stack_height_by_col = vec![-1; config.width as usize];
         for atom in atoms {
@@ -32,7 +36,7 @@ impl CollisionHelper {
         vec_stack_height_by_col
     }
 
-    pub fn validate_block(config: &Config, float_block: &Block, atoms: &Vec<Atom>) -> bool {
+    pub fn validate_block(config: &TetrisConfig, float_block: &Block, atoms: &Vec<Atom>) -> bool {
         // 画面両外側にはみ出している場合不可
         let is_overlap_to_outline = float_block
             .ref_points()

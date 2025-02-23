@@ -1,6 +1,6 @@
-use crate::domain::tetris::EventType;
+use crate::domain::tetris::TetrisEventType;
 
 #[derive(Clone)]
 pub enum TetrisMessage {
-    EventQueue(EventType),
+    EventQueue(TetrisEventType),
 }

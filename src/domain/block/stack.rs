@@ -1,15 +1,15 @@
 use crate::domain::{
     block::{atom::Atom, block::Block, helper::compress::CompressHelper},
-    tetris::Config,
+    tetris::TetrisConfig,
 };
 
 pub struct BlockStack {
-    config: Config,
+    config: TetrisConfig,
     atoms: Vec<Atom>,
 }
 
 impl BlockStack {
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: TetrisConfig) -> Self {
         Self {
             config,
             atoms: Vec::new(),

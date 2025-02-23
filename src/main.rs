@@ -4,13 +4,12 @@ mod repository;
 mod service;
 mod usecase;
 
-use crate::domain::tetris::EventType;
-use crate::domain::{message::tetris::TetrisMessage, tetris::Tetris};
+use domain::tetris::{TetrisConfig, TetrisEventType};
+use domain::{message::tetris::TetrisMessage, tetris::Tetris};
+use presentation::monitor::Monitor;
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use domain::tetris::Config;
-use presentation::monitor::Monitor;
 use std::io;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{self};
@@ -19,11 +18,12 @@ use tokio::time::{sleep, Duration};
 #[tokio::main]
 async fn main() -> io::Result<()> {
     // ゲーム設定
-    let config = Config {
+    let config = TetrisConfig {
         width: 10,
         height: 20,
         score_one_line: 100,
         score_multiple_line_weight: 2,
+        initial_duration: 1500,
     };
 
     // チャネルの作成
@@ -44,11 +44,12 @@ async fn main() -> io::Result<()> {
         }
     });
 
-    // Tetrisアクターの起動（1つ目）
+    // Tetrisアクターの起動（PLAYER1）
     let monitor_tx_clone = monitor_tx.clone();
     let mut timer_rx1 = timer_rx1;
     tokio::spawn(async move {
         let mut tetris1 = Tetris::new(0, config, monitor_tx_clone);
+        tetris1.init();
         loop {
             tokio::select! {
                 Some(msg) = tetris1_rx.recv() => {
@@ -61,11 +62,12 @@ async fn main() -> io::Result<()> {
         }
     });
 
-    // Tetrisアクターの起動（2つ目）
+    // Tetrisアクターの起動（PLAYER2）
     let monitor_tx_clone = monitor_tx.clone();
     let mut timer_rx2 = timer_rx2;
     tokio::spawn(async move {
         let mut tetris2 = Tetris::new(1, config, monitor_tx_clone);
+        tetris2.init();
         loop {
             tokio::select! {
                 Some(msg) = tetris2_rx.recv() => {
@@ -78,12 +80,12 @@ async fn main() -> io::Result<()> {
         }
     });
 
-    // 定期的な"Z"の送信（broadcastを使用）
+    // 定期的な更新処理の送信（broadcastを使用）
     let timer_tx_clone = timer_tx.clone();
     tokio::spawn(async move {
         loop {
-            sleep(Duration::from_millis(1500)).await;
-            let _ = timer_tx_clone.send(TetrisMessage::EventQueue(EventType::None));
+            sleep(Duration::from_millis(config.initial_duration)).await;
+            let _ = timer_tx_clone.send(TetrisMessage::EventQueue(TetrisEventType::None));
         }
     });
 
@@ -127,13 +129,13 @@ async fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn char_to_event_type(c: char) -> EventType {
-    let event_type: EventType = match c {
-        'w' | 'i' => EventType::BlockRotate,
-        'a' | 'j' => EventType::BlockMoveLeft,
-        'd' | 'l' => EventType::BlockMoveRight,
-        's' | 'k' => EventType::BlockMoveDown,
-        _ => EventType::None,
+fn char_to_event_type(c: char) -> TetrisEventType {
+    let event_type: TetrisEventType = match c {
+        'w' | 'i' => TetrisEventType::BlockRotate,
+        'a' | 'j' => TetrisEventType::BlockMoveLeft,
+        'd' | 'l' => TetrisEventType::BlockMoveRight,
+        's' | 'k' => TetrisEventType::BlockMoveDown,
+        _ => TetrisEventType::None,
     };
     event_type
 }

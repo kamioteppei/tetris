@@ -1,8 +1,8 @@
-use crate::domain::{block::atom::Atom, tetris::Config};
+use crate::domain::{block::atom::Atom, tetris::TetrisConfig};
 
 pub struct CompressHelper {}
 impl CompressHelper {
-    pub fn get_vec_is_fullfill_by_line(config: &Config, atoms: &Vec<Atom>) -> Vec<bool> {
+    pub fn get_vec_is_fullfill_by_line(config: &TetrisConfig, atoms: &Vec<Atom>) -> Vec<bool> {
         let mut vec_atom_counts_by_line = vec![0; config.height as usize];
         for atom in atoms {
             let &(_, y) = atom.ref_point();

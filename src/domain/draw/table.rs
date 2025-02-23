@@ -1,17 +1,18 @@
 use crate::domain::block::atom::Atom;
 use crate::domain::block::r#type::RGB;
 use crate::domain::draw::cell::Cell;
+
 use std::mem;
 
 #[derive(Clone)]
-pub struct DrawModel {
+pub struct DrawTable {
     width: i32,
     height: i32,
     bgcolor: RGB,
     cells: Option<Vec<Vec<Cell>>>,
 }
 
-impl DrawModel {
+impl DrawTable {
     pub fn new(width: i32, height: i32, bgcolor: RGB) -> Self {
         Self {
             width,

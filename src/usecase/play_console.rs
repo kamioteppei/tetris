@@ -1,6 +1,6 @@
 // use crate::{
 //     domain::{
-//         contract::{Config, IConsoleGame, TetrisError},
+//         contract::{TetrisConfig, IConsoleGame, TetrisError},
 //         tetris::Tetris,
 //     },
 //     presentation::drawer_console::DrawConsole,
@@ -12,7 +12,7 @@
 //     time::Duration,
 // };
 
-// pub fn play_console(config: Config) {
+// pub fn play_console(config: TetrisConfig) {
 //     // コンソールクリア
 //     println!("\x1B[2J");
 
