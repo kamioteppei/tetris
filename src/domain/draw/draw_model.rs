@@ -3,14 +3,15 @@ use crate::domain::block::r#type::RGB;
 use crate::domain::draw::cell::Cell;
 use std::mem;
 
-pub struct DrawInfo {
+#[derive(Clone)]
+pub struct DrawModel {
     width: i32,
     height: i32,
     bgcolor: RGB,
     cells: Option<Vec<Vec<Cell>>>,
 }
 
-impl DrawInfo {
+impl DrawModel {
     pub fn new(width: i32, height: i32, bgcolor: RGB) -> Self {
         Self {
             width,

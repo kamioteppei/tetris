@@ -1,6 +1,6 @@
 use crate::domain::{
     block::{atom::Atom, block::Block},
-    contract::Config,
+    tetris::Config,
 };
 use std::mem;
 

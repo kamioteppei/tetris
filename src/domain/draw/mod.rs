@@ -1,2 +1,2 @@
 mod cell;
-pub mod draw_info;
+pub mod draw_model;

@@ -1,4 +1,4 @@
-use crate::domain::{block::atom::Atom, contract::Config};
+use crate::domain::{block::atom::Atom, tetris::Config};
 
 pub struct CompressHelper {}
 impl CompressHelper {

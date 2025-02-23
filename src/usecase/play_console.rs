@@ -1,94 +1,94 @@
-use crate::{
-    domain::{
-        contract::{Config, IConsoleGame, TetrisError},
-        tetris::Tetris,
-    },
-    presentation::drawer_console::DrawConsole,
-};
-use console::{Key, Term};
-use std::{
-    sync::{Arc, Mutex},
-    thread::{sleep, spawn},
-    time::Duration,
-};
+// use crate::{
+//     domain::{
+//         contract::{Config, IConsoleGame, TetrisError},
+//         tetris::Tetris,
+//     },
+//     presentation::drawer_console::DrawConsole,
+// };
+// use console::{Key, Term};
+// use std::{
+//     sync::{Arc, Mutex},
+//     thread::{sleep, spawn},
+//     time::Duration,
+// };
 
-pub fn play_console(config: Config) {
-    // コンソールクリア
-    println!("\x1B[2J");
+// pub fn play_console(config: Config) {
+//     // コンソールクリア
+//     println!("\x1B[2J");
 
-    // 入力キー配列
-    let press_keys: Arc<Mutex<Vec<Key>>> = Arc::new(Mutex::new(Vec::new()));
+//     // 入力キー配列
+//     let press_keys: Arc<Mutex<Vec<Key>>> = Arc::new(Mutex::new(Vec::new()));
 
-    // サブスレッドでキー入力監視
-    {
-        let press_keys_linster = Arc::clone(&press_keys);
-        spawn(move || listen(&press_keys_linster));
-        // メインスレッド終了時にサブスレッドも終了させるのでhandle.join().unwrap();しない
-    }
+//     // サブスレッドでキー入力監視
+//     {
+//         let press_keys_linster = Arc::clone(&press_keys);
+//         spawn(move || listen(&press_keys_linster));
+//         // メインスレッド終了時にサブスレッドも終了させるのでhandle.join().unwrap();しない
+//     }
 
-    // テトリス起動
-    let mut tetris = Tetris::new(config);
-    run(&mut tetris, &press_keys);
+//     // テトリス起動
+//     let mut tetris = Tetris::new(config);
+//     run(&mut tetris, &press_keys);
 
-    // ゲーム終了
-    println!("Game Over!");
-}
+//     // ゲーム終了
+//     println!("Game Over!");
+// }
 
-// キー入力監視(Key型のキューで保持)
-fn listen(press_keys: &Mutex<Vec<Key>>) -> ! {
-    let term = Term::stdout();
-    loop {
-        let key = match term.read_key() {
-            Ok(key) => key,
-            Err(_) => {
-                continue;
-            }
-        };
-        let mut press_keys = press_keys.lock().unwrap();
-        press_keys.push(key);
-    }
-}
+// // キー入力監視(Key型のキューで保持)
+// fn listen(press_keys: &Mutex<Vec<Key>>) -> ! {
+//     let term = Term::stdout();
+//     loop {
+//         let key = match term.read_key() {
+//             Ok(key) => key,
+//             Err(_) => {
+//                 continue;
+//             }
+//         };
+//         let mut press_keys = press_keys.lock().unwrap();
+//         press_keys.push(key);
+//     }
+// }
 
-// 状態更新と画面更新
-fn run(tetris: &mut impl IConsoleGame, press_keys: &Mutex<Vec<Key>>) {
-    tetris.init();
-    'tetris: loop {
-        let mut press_keys = press_keys.lock().unwrap();
+// // 状態更新と画面更新
+// fn run(tetris: &mut impl IConsoleGame, press_keys: &Mutex<Vec<Key>>) {
+//     tetris.init();
+//     'tetris: loop {
+//         let mut press_keys = press_keys.lock().unwrap();
 
-        if press_keys.is_empty() {
-            // 入力キーを取得できない場合の更新処理
-            let is_continue = do_event(tetris, &None);
-            if !is_continue {
-                break 'tetris;
-            }
-        } else {
-            // 入力キーを順次渡して更新処理
-            while let Some(press_key) = press_keys.pop() {
-                let is_continue = do_event(tetris, &Some(press_key));
-                if !is_continue {
-                    break 'tetris;
-                }
-            }
-            *press_keys = Vec::new();
-        }
-        // 更新待機に入る前に、キー入力受付再開
-        drop(press_keys);
+//         if press_keys.is_empty() {
+//             // 入力キーを取得できない場合の更新処理
+//             let is_continue = do_event(tetris, &None);
+//             if !is_continue {
+//                 break 'tetris;
+//             }
+//         } else {
+//             // 入力キーを順次渡して更新処理
+//             while let Some(press_key) = press_keys.pop() {
+//                 let is_continue = do_event(tetris, &Some(press_key));
+//                 if !is_continue {
+//                     break 'tetris;
+//                 }
+//             }
+//             *press_keys = Vec::new();
+//         }
+//         // 更新待機に入る前に、キー入力受付再開
+//         drop(press_keys);
 
-        // 更新待機
-        let dulation = tetris.ref_status().update_duraltion_in_millis;
-        sleep(Duration::from_millis(dulation));
-    }
-}
+//         // 更新待機
+//         let dulation = tetris.ref_status().update_duraltion_in_millis;
+//         sleep(Duration::from_millis(dulation));
+//     }
+// }
 
-fn do_event(tetris: &mut impl IConsoleGame, press_keys: &Option<Key>) -> bool {
-    let drawer: DrawConsole = DrawConsole {};
-    if let Err(error) = tetris.update(&press_keys) {
-        match error {
-            TetrisError::StackOverFlowError => {
-                return false;
-            }
-        }
-    };
-    tetris.draw(&drawer);
-    true
-}
+// fn do_event(tetris: &mut impl IConsoleGame, press_keys: &Option<Key>) -> bool {
+//     let drawer: DrawConsole = DrawConsole {};
+//     if let Err(error) = tetris.update(&press_keys) {
+//         match error {
+//             TetrisError::StackOverFlowError => {
+//                 return false;
+//             }
+//         }
+//     };
+//     tetris.draw(&drawer);
+//     true
+// }

@@ -1,6 +1,6 @@
 use crate::domain::{
     block::{atom::Atom, block::Block, helper::compress::CompressHelper},
-    contract::Config,
+    tetris::Config,
 };
 
 pub struct BlockStack {

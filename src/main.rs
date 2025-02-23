@@ -4,14 +4,20 @@ mod repository;
 mod service;
 mod usecase;
 
-use domain::contract::Config;
-use usecase::play_console::play_console;
+use crate::domain::tetris::EventType;
+use crate::domain::{message::tetris::TetrisMessage, tetris::Tetris};
 
-// 【保留】「メモリを共有することでやり取りするな; 代わりにやり取りすることでメモリを共有しろ!」
-// 【保留】 ブロック落下スピード調整
-// TODO: 画面領域からはみ出たブロックの位置調整
+use crossterm::event::{self, Event, KeyCode, KeyEventKind};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use domain::tetris::Config;
+use presentation::monitor::Monitor;
+use std::io;
+use tokio::sync::broadcast;
+use tokio::sync::mpsc::{self};
+use tokio::time::{sleep, Duration};
 
-fn main() {
+#[tokio::main]
+async fn main() -> io::Result<()> {
     // ゲーム設定
     let config = Config {
         width: 10,
@@ -20,6 +26,114 @@ fn main() {
         score_multiple_line_weight: 2,
     };
 
-    // コンソールUIで実行(2D版ユースケース等の拡張を想定した構成)
-    play_console(config);
+    // チャネルの作成
+    let (monitor_tx, mut monitor_rx) = mpsc::channel(32);
+    let (tetris1_tx, mut tetris1_rx) = mpsc::channel(32);
+    let (tetris2_tx, mut tetris2_rx) = mpsc::channel(32);
+
+    // broadcast チャネルの作成
+    let (timer_tx, _) = broadcast::channel(16);
+    let timer_rx1 = timer_tx.subscribe();
+    let timer_rx2 = timer_tx.subscribe();
+
+    // Monitorアクターの起動
+    let mut monitor = Monitor::new();
+    tokio::spawn(async move {
+        while let Some(msg) = monitor_rx.recv().await {
+            monitor.handle_message(msg).await;
+        }
+    });
+
+    // Tetrisアクターの起動（1つ目）
+    let monitor_tx_clone = monitor_tx.clone();
+    let mut timer_rx1 = timer_rx1;
+    tokio::spawn(async move {
+        let mut tetris1 = Tetris::new(0, config, monitor_tx_clone);
+        loop {
+            tokio::select! {
+                Some(msg) = tetris1_rx.recv() => {
+                    tetris1.handle_message(msg).await;
+                }
+                Ok(msg) = timer_rx1.recv() => {
+                    tetris1.handle_message(msg).await;
+                }
+            }
+        }
+    });
+
+    // Tetrisアクターの起動（2つ目）
+    let monitor_tx_clone = monitor_tx.clone();
+    let mut timer_rx2 = timer_rx2;
+    tokio::spawn(async move {
+        let mut tetris2 = Tetris::new(1, config, monitor_tx_clone);
+        loop {
+            tokio::select! {
+                Some(msg) = tetris2_rx.recv() => {
+                    tetris2.handle_message(msg).await;
+                }
+                Ok(msg) = timer_rx2.recv() => {
+                    tetris2.handle_message(msg).await;
+                }
+            }
+        }
+    });
+
+    // 定期的な"Z"の送信（broadcastを使用）
+    let timer_tx_clone = timer_tx.clone();
+    tokio::spawn(async move {
+        loop {
+            sleep(Duration::from_millis(1500)).await;
+            let _ = timer_tx_clone.send(TetrisMessage::EventQueue(EventType::None));
+        }
+    });
+
+    // ターミナルをRawモードに設定
+    enable_raw_mode()?;
+
+    loop {
+        // キー入力の待機
+        if event::poll(Duration::from_millis(100))? {
+            if let Event::Key(key_event) = event::read()? {
+                // キー押下時のみ処理
+                if key_event.kind == KeyEventKind::Press {
+                    match key_event.code {
+                        KeyCode::Char(c) => {
+                            match c {
+                                'a' | 's' | 'd' | 'w' => {
+                                    tetris1_tx
+                                        .send(TetrisMessage::EventQueue(char_to_event_type(c)))
+                                        .await
+                                        .expect("Failed to send to tetris1");
+                                }
+                                'j' | 'k' | 'l' | 'i' => {
+                                    tetris2_tx
+                                        .send(TetrisMessage::EventQueue(char_to_event_type(c)))
+                                        .await
+                                        .expect("Failed to send to tetris2");
+                                }
+                                'q' => break, // qで終了
+                                _ => {}
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    // ターミナルの設定を元に戻す
+    disable_raw_mode()?;
+    Ok(())
+}
+
+fn char_to_event_type(c: char) -> EventType {
+    let event_type: EventType = match c {
+        'w' | 'i' => EventType::BlockRotate,
+        'a' | 'j' => EventType::BlockMoveLeft,
+        'd' | 'l' => EventType::BlockMoveRight,
+        's' | 'k' => EventType::BlockMoveDown,
+        _ => EventType::None,
+    };
+    event_type
 }
