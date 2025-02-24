@@ -26,12 +26,14 @@ async fn main() -> io::Result<()> {
         initial_duration: 1500,
     };
 
-    // チャネルの作成
+    // 各テトリスからMonitorへ画面更新用のキューを送信するためのチャンネル
     let (monitor_tx, mut monitor_rx) = mpsc::channel(32);
+
+    // メインスレッドから各テトリスへユーザーの入力を送信するためのチャンネル
     let (tetris1_tx, mut tetris1_rx) = mpsc::channel(32);
     let (tetris2_tx, mut tetris2_rx) = mpsc::channel(32);
 
-    // broadcast チャネルの作成
+    // メインスレッドから各テトリスに一定間隔でモデル更新用のキューを一斉配信するためのチャンネル
     let (timer_tx, _) = broadcast::channel(16);
     let timer_rx1 = timer_tx.subscribe();
     let timer_rx2 = timer_tx.subscribe();

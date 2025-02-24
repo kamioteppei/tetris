@@ -49,7 +49,7 @@ impl Monitor {
 
     fn draw(&self, container_list: &Vec<DrawContainer>) {
         // コンソール出力内容全体を保持するパネル
-        let mut DrawPanel = DrawPanel::new(100, 30, ' ');
+        let mut draw_panel = DrawPanel::new(100, 30, ' ');
 
         // パーツをパネルに上書き
         for (p, c) in container_list.iter().enumerate() {
@@ -82,20 +82,20 @@ impl Monitor {
                 lines.push("Game Over".to_string());
             }
 
-            DrawPanel.overlay_strings(
+            draw_panel.overlay_strings(
                 &lines,
                 3,
                 3 + (p + 1) * (draw_table.ref_width() as usize + 5),
             );
         }
         // パネルフッター
-        DrawPanel.overlay_string(
+        draw_panel.overlay_string(
             "Press keys (a,s,d,w for PLAYER1, j,k,l,i for PLAYER2, q to quit):",
             26,
             3,
         );
 
         // 結果を出力
-        DrawPanel.print();
+        draw_panel.print();
     }
 }
