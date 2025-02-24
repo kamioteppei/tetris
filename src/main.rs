@@ -89,6 +89,13 @@ async fn main() -> io::Result<()> {
         }
     });
 
+    return run_game_loop(tetris1_tx, tetris2_tx).await;
+}
+
+async fn run_game_loop(
+    tetris1_tx: mpsc::Sender<TetrisMessage>,
+    tetris2_tx: mpsc::Sender<TetrisMessage>,
+) -> io::Result<()> {
     // ターミナルをRawモードに設定
     enable_raw_mode()?;
 
@@ -126,6 +133,7 @@ async fn main() -> io::Result<()> {
 
     // ターミナルの設定を元に戻す
     disable_raw_mode()?;
+
     Ok(())
 }
 

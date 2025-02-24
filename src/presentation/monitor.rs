@@ -1,4 +1,5 @@
 use crate::domain::draw::container::DrawContainer;
+use crate::domain::draw::panel::DrawPanel;
 use crate::domain::draw::table::DrawTable;
 use crate::domain::message::monitor::MonitorMessage;
 use crate::domain::tetris::TetrisStatus;
@@ -21,7 +22,10 @@ impl Monitor {
             container_list: Arc::new(Mutex::new(vec![
                 DrawContainer {
                     id: 0,
-                    status: TetrisStatus { score: 0 },
+                    status: TetrisStatus {
+                        score: 0,
+                        is_game_over: false
+                    },
                     draw_table: DrawTable::new(0, 0, (0, 0, 0)),
                 };
                 2
@@ -44,9 +48,18 @@ impl Monitor {
     }
 
     fn draw(&self, container_list: &Vec<DrawContainer>) {
-        for (_, c) in container_list.iter().enumerate() {
+        // コンソール出力内容全体を保持するパネル
+        let mut DrawPanel = DrawPanel::new(100, 30, ' ');
+
+        // パーツをパネルに上書き
+        for (p, c) in container_list.iter().enumerate() {
             let draw_table = &c.draw_table;
             let status = &c.status;
+            let mut lines: Vec<String> = Vec::new();
+
+            // パーツヘッダー
+            lines.push(format!("PLAYER: {}", p + 1));
+
             // 上段から回す
             for i in (0..draw_table.ref_height()).rev() {
                 let mut buf: String = String::from(" ");
@@ -61,10 +74,28 @@ impl Monitor {
                         .unwrap();
                     buf += if cell.is_block { "■" } else { "□" };
                 }
-                println!("\x1B[{};1H{}", draw_table.ref_height() - i, buf);
+                lines.push(buf);
             }
-            println!("Score: {}", status.score);
-            println!("Press keys (a,s,d,w for PLAYER1, j,k,l,i for PLAYER2, q to quit):\n");
+            // パーツフッター
+            lines.push(format!("Score: {}", status.score));
+            if status.is_game_over {
+                lines.push("Game Over".to_string());
+            }
+
+            DrawPanel.overlay_strings(
+                &lines,
+                3,
+                3 + (p + 1) * (draw_table.ref_width() as usize + 5),
+            );
         }
+        // パネルフッター
+        DrawPanel.overlay_string(
+            "Press keys (a,s,d,w for PLAYER1, j,k,l,i for PLAYER2, q to quit):",
+            26,
+            3,
+        );
+
+        // 結果を出力
+        DrawPanel.print();
     }
 }

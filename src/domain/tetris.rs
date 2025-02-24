@@ -30,6 +30,7 @@ pub enum TetrisEventType {
 #[derive(Clone, Copy)]
 pub struct TetrisStatus {
     pub score: i32,
+    pub is_game_over: bool,
 }
 
 pub enum TetrisError {
@@ -51,7 +52,10 @@ impl Tetris {
     pub fn new(id: usize, config: TetrisConfig, monitor_tx: Sender<MonitorMessage>) -> Self {
         let width = config.width; // プリミティブ型の値は代入時に自動で複製されるから所有権も排他
         let height = config.height; // プリミティブ型以外はcloneでコピー作成するか参照を渡すか
-        let status = TetrisStatus { score: 0 };
+        let status = TetrisStatus {
+            score: 0,
+            is_game_over: false,
+        };
         Self {
             id,
             config,
@@ -69,11 +73,19 @@ impl Tetris {
     }
 
     pub async fn handle_message(&mut self, msg: TetrisMessage) {
+        // ゲームオーバー状態の場合は何もしない
+        if self.status.is_game_over {
+            return;
+        }
+
         match msg {
             TetrisMessage::EventQueue(event_type) => {
                 if let Err(error) = self.update(event_type) {
                     match error {
-                        TetrisError::StackOverFlowError => {}
+                        TetrisError::StackOverFlowError => {
+                            // ゲーム終了処理
+                            self.status.is_game_over = true;
+                        }
                     }
                 };
 
